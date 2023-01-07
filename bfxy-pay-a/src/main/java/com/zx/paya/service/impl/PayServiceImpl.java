@@ -3,6 +3,7 @@ package com.zx.paya.service.impl;
 import com.zx.paya.entity.CustomerAccount;
 import com.zx.paya.mapper.CustomerAccountMapper;
 import com.zx.paya.service.PayService;
+import com.zx.paya.service.provider.CallBackService;
 import com.zx.paya.service.provider.TransactionMessageProducer;
 import com.zx.paya.utils.FastJsonConvertUtil;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -26,14 +27,18 @@ import java.util.concurrent.CountDownLatch;
 @Service
 public class PayServiceImpl implements PayService {
 
-    private static final String TOPIC = "pay-topic";
-    private static final String TAG = "pay";
+    public static final String TX_PAY_TOPIC = "tx_pay_topic";
+    public static final String TX_PAY_TAGS = "pay";
 
     @Autowired
     private CustomerAccountMapper customerAccountMapper;
 
     @Autowired
     private TransactionMessageProducer transactionMessageProducer;
+
+
+    @Autowired
+    private CallBackService callbackService;
 
     @Override
     public String pay(String accountId, String orderId, String userId, double money) {
@@ -56,7 +61,7 @@ public class PayServiceImpl implements PayService {
             data.put("money", money);
 
             String messageKey = UUID.randomUUID().toString().replaceAll("-", "");
-            Message message = new Message(TOPIC, TAG, messageKey, FastJsonConvertUtil.convertObjectToJSON(data).getBytes());
+            Message message = new Message(TX_PAY_TOPIC, TX_PAY_TAGS, messageKey, FastJsonConvertUtil.convertObjectToJSON(data).getBytes());
             try {
                 CountDownLatch countDownLatch = new CountDownLatch(1);
                 Map<String, Object> args = new HashMap<>();
@@ -68,15 +73,19 @@ public class PayServiceImpl implements PayService {
                 countDownLatch.await();
 
                 System.out.println(sendResult.getLocalTransactionState());
-                if(sendResult.getSendStatus() == SendStatus.SEND_OK
-                && sendResult.getLocalTransactionState() == LocalTransactionState.COMMIT_MESSAGE){
+                if (sendResult.getSendStatus() == SendStatus.SEND_OK
+                        && sendResult.getLocalTransactionState() == LocalTransactionState.COMMIT_MESSAGE) {
+                    // 修改订单状态
+                    SendResult result = callbackService.sendOKMessage(orderId, userId);
+                    System.out.println(result);
+
                     resultMsg = "支付成功";
-                }else{
+                } else {
                     resultMsg = "支付失败";
                 }
             } catch (MQClientException | InterruptedException e) {
                 e.printStackTrace();
-                resultMsg =  "支付失败";
+                resultMsg = "支付失败";
             }
         }
 

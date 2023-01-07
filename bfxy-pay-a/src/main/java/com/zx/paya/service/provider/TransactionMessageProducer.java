@@ -20,14 +20,16 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class TransactionMessageProducer implements InitializingBean {
     private TransactionMQProducer transactionMQProducer;
-    private final String TRANSACTION_PRODUCER_GROUP = "TPG";
+    private static final String TRANSACTION_PRODUCER_GROUP = "TPG";
+    private static final String NAMESERVER = "192.168.62.102:9876";
+
 
     @Autowired
     private TransactionListenerImpl transactionListener;
 
     public TransactionMessageProducer() throws MQClientException {
         this.transactionMQProducer = new TransactionMQProducer(TRANSACTION_PRODUCER_GROUP);
-        transactionMQProducer.setNamesrvAddr("rocketmqos:9876");
+        transactionMQProducer.setNamesrvAddr(NAMESERVER);
         transactionMQProducer.setRetryTimesWhenSendFailed(3);
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2, 5, 100, TimeUnit.SECONDS
                 , new ArrayBlockingQueue<Runnable>(2000)
