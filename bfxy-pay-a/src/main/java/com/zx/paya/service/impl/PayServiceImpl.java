@@ -76,7 +76,7 @@ public class PayServiceImpl implements PayService {
                 if (sendResult.getSendStatus() == SendStatus.SEND_OK
                         && sendResult.getLocalTransactionState() == LocalTransactionState.COMMIT_MESSAGE) {
                     // 修改订单状态
-                    SendResult result = callbackService.sendOKMessage(orderId, userId);
+                    SendResult result = callbackService.sendOKMessage(userId, orderId);
                     System.out.println(result);
 
                     resultMsg = "支付成功";

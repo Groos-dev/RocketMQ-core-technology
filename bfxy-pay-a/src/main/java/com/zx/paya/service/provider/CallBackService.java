@@ -1,5 +1,6 @@
 package com.zx.paya.service.provider;
 
+import com.zx.paya.constants.OrderStatus;
 import com.zx.paya.utils.FastJsonConvertUtil;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
@@ -26,7 +27,9 @@ public class CallBackService {
         Map<String, Object> params = new HashMap<>();
         String messageKey = UUID.randomUUID().toString().replaceAll("-", "");
         params.put("userId",userId);
-        params.put("ordreId", orderId);
+        params.put("orderId", orderId);
+        params.put("status", OrderStatus.SUCCESS.getCode());
+
         Message message = new Message(CALL_BACK_TOPIC, CALL_BACK_TAG,messageKey,
                 FastJsonConvertUtil.convertObjectToJSON(params).getBytes());
 

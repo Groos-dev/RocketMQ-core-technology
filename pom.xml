@@ -24,6 +24,7 @@
         <module>bfxy-store-api</module>
         <module>bfxy-pay-a</module>
         <module>bfxy-pay-b</module>
+        <module>bfxy-pkg</module>
     </modules>
 
     <properties>
